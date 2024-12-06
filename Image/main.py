@@ -14,11 +14,12 @@ ROW_SPACING = 40  # Space between rows within a section
 
 # Example match data
 our_team = 'Team1' # Team we are analyzing
+players = ["dawn", "great", "eletro", "max", "armed"]
 team = [
     # {"section": "Example",
     #     "matches": [
     #        {"team": "team_name", "W/L": "W for Win or L for Loss", "side": "Blue or Red",
-    #             "picks": ["Pick1", "Pick2", "Pick3", "Pick4", "Pick5", "Ban1", "Ban2", "Ban3", "Ban4", "Ban5"]}, 
+    #             "picks": ["Pick1 (T)op", "Pick2 (J)ungle", "Pick3 (M)iddle", "Pick4 (A)DC", "Pick5 (S)upport", "Ban1", "Ban2", "Ban3", "Ban4", "Ban5"]}, 
     #     ]},
     {"section": "Placement Matches",
         "matches": [
@@ -53,70 +54,75 @@ team = [
     # Add more sections and rows as needed...
 ]
 
+
 def rng():
     return random.randint(1,50)
 
 # TODO
-# Figure out how to display champions played in ROLE rather than pick order
 # Subs?
-# Remove any static numbers
+# Names from right to left instead of left to right
+# Colors
 
 def top_layout(team, output_file="positions.jpg"):
-    ICON_SPACING = 10  # Space between icons within a row
-    GAME_SPACING = 30 #Space between teams (Blue and Red)
-    SECTION_SPACING = 100  # Space between sections (e.g., Placement Matches, Week 1, etc.)
-    # Create a blank canvas
-    img = Image.new("RGB", OUTPUT_IMAGE_SIZE, "beige")
-    draw = ImageDraw.Draw(img)
-    
+    GAME_SPACING = 10 #Space between teams (Blue and Red)
+    SECTION_SPACING = 20  # Space between sections (e.g., Placement Matches, Week 1, etc.)
+
     # Load a font for text
     font = ImageFont.truetype(FONT_PATH, 20)
-    small_font = ImageFont.truetype(FONT_PATH, 15)
-    
     x_margin, y_margin = 50, 50  # Starting positions
     x_offset = x_margin
     y_offset = y_margin
+    count = 0
+    icon_x = x_margin + 100  # Indent icons to the right of text
+
+    # Create a blank canvas
+    img = Image.new("RGB", (int(x_offset * 2 + (30 * (CHAMPION_ICON_SIZE[0] * 1.25) + GAME_SPACING) + 10 * SECTION_SPACING), int(y_offset * 1.2 + 5 * (CHAMPION_ICON_SIZE[1] * 1.25))), "beige")
+    draw = ImageDraw.Draw(img)
     
+
+    for player in players:
+    # Calculate the bounding box of the text to get the width
+        bbox = draw.textbbox((0, 0), player.upper(), font=font)
+        text_width = bbox[2] - bbox[0]  # bbox[2] is the right side, bbox[0] is the left side
+
+        # Calculate the vertical position
+        pos = y_offset * 1.1 + (count * CHAMPION_ICON_SIZE[1] * 1.25)
+        
+        # Draw text right-aligned by subtracting text width from the x_offset
+        draw.text((x_offset - text_width, pos), player.upper(), fill="black", font=font)
+
+        count += 1
     for section in team:
-        # Draw section title
-        draw.text((x_offset, y_offset), section["section"], fill="black", font=font)
-        y_offset += ROW_SPACING  # Move down for the rows
-        for match in section["matches"]: # BLUE
-            # Draw team names and scores
-            text = f"{match['team']} ({match['W/L']})"
-            draw.text((x_offset, y_offset), text, fill="black", font=small_font)
-            
+        for match in section["matches"]:
+            count = 1
             # Place champion icons
-            icon_x = x_offset + 400  # Indent icons to the right of text
-            count = 0
             for champ in match["picks"]:
-                url = f"https://raw.communitydragon.org/latest/game/assets/characters/{champ}/hud/{champ}_square.png"
-                champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
-                img.paste(champ_img, (icon_x, y_offset))
-                icon_x += CHAMPION_ICON_SIZE[0] + ICON_SPACING  # Space between icons
-            
-            y_offset += ROW_SPACING  # Move to the next row
+                if count <= 5:
+                    champion = champ.split(" ")
+                    ID = key[champion[0]]            
+                    # items = key[rng()]
+                    # items = str(items).split("'")
+                    url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
+                    champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
+                    if champion[1] == "T":
+                        pos = y_offset + 0 * (CHAMPION_ICON_SIZE[1] * 1.25)
+                    elif champion[1] == "J":
+                        pos = y_offset + 1 * (CHAMPION_ICON_SIZE[1] * 1.25)
+                    elif champion[1] == "M":
+                        pos = y_offset + 2 * (CHAMPION_ICON_SIZE[1] * 1.25)
+                    elif champion[1] == "A":
+                        pos = y_offset + 3 * (CHAMPION_ICON_SIZE[1] * 1.25)
+                    elif champion[1] == "S":
+                        pos = y_offset + 4 * (CHAMPION_ICON_SIZE[1] * 1.25)
+                    img.paste(champ_img, (icon_x, int(pos)))
+                    count += 1
+                else:
+                    break
+            icon_x += CHAMPION_ICON_SIZE[0] + GAME_SPACING
+
         
         # Add spacing between sections
-        y_offset += SECTION_SPACING - ROW_SPACING
-        
-        for match in section["matches"]: # RED
-            # Draw team names and scores
-            text = f"{match['team']} ({match['W/L']})"
-            draw.text((x_offset, y_offset), text, fill="black", font=small_font)
-            
-            # Place champion icons
-            icon_x = x_offset + 400  # Indent icons to the right of text
-            for champ in match["picks"]:
-                url = f"https://raw.communitydragon.org/latest/game/assets/characters/{champ}/hud/{champ}_square.png"
-                champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
-                img.paste(champ_img, (icon_x, y_offset))
-                icon_x += CHAMPION_ICON_SIZE[0] + ICON_SPACING  # Space between icons
-            
-            y_offset += ROW_SPACING  # Move to the next row
-        
-        # Add spacing between sections
-        y_offset += SECTION_SPACING - ROW_SPACING
+        icon_x += SECTION_SPACING
 
 
     # Save the result
@@ -125,7 +131,7 @@ def top_layout(team, output_file="positions.jpg"):
 
 # TODO
 # KDAs
-# Remove any static numbers
+# Lines
 
 def middle_layout(team, output_file="games.jpg"):
     ICON_SPACING = 10  # Space between icons within a row
@@ -158,8 +164,6 @@ def middle_layout(team, output_file="games.jpg"):
                     ID = champ.split(" ")
                     ID = ID[0]        
                     ID = key[ID]            
-                    # items = key[rng()]
-                    # items = str(items).split("'")
                     url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
                     champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
                     champ_img = champ_img.convert("RGBA")
@@ -184,9 +188,9 @@ def middle_layout(team, output_file="games.jpg"):
                         champ_img.putdata(new_data)
                     else: # Pick 1 & 2 & 3
                         pos = icon_x
-                    img.paste(champ_img, (pos, y_offset), champ_img)
+                    img.paste(champ_img, (int(pos), y_offset), champ_img)
                     if count == 1: 
-                        icon_x += CHAMPION_ICON_SIZE[0] + ICON_SPACING + 40  # Space between icons
+                        icon_x += CHAMPION_ICON_SIZE[0] * 2 + ICON_SPACING  # Space between icons
                     else:
                         icon_x += CHAMPION_ICON_SIZE[0] + ICON_SPACING
                     count += 1
@@ -197,22 +201,20 @@ def middle_layout(team, output_file="games.jpg"):
                 draw.text((x_offset, y_offset), text, fill="black", font=small_font)
                 
                 # Place champion icons
-                icon_x = x_offset + 20 + ((CHAMPION_ICON_SIZE[0] + ICON_SPACING) * 6)  # Indent icons to the right of text
+                icon_x = x_offset + CHAMPION_ICON_SIZE[0] / 2 + ((CHAMPION_ICON_SIZE[0] + ICON_SPACING) * 6)  # Indent icons to the right of text
                 count = 1
                 for champ in match["picks"]:
                     ID = champ.split(" ")
                     ID = ID[0]
                     ID = key[ID]
-                    # items = key[rng()]
-                    # items = str(items).split("'")
                     url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
                     champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
                     champ_img = champ_img.convert("RGBA")
                     if count == 4: # Pick 4 & 5 
-                        icon_x += 10 + 3 * (CHAMPION_ICON_SIZE[0] + ICON_SPACING)
+                        icon_x += CHAMPION_ICON_SIZE[0] / 4 + 3 * (CHAMPION_ICON_SIZE[0] + ICON_SPACING)
                         pos = icon_x
                     elif count == 6 or count == 7 or count == 8: # Ban 1 & 2 & 3
-                        pos = x_offset + ((count - 4) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING) * 2.5))  # Indent icons to the right of text    
+                        pos = x_offset + CHAMPION_ICON_SIZE[0] / 4 + ((count - 4) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING)))  # Indent icons to the right of text    
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
@@ -220,7 +222,7 @@ def middle_layout(team, output_file="games.jpg"):
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     elif count == 9 or count == 10: # Ban 4 & 5
-                        pos = x_offset + ((count + 2) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING) / 2.5))  # Indent icons to the right of text    
+                        pos = x_offset - CHAMPION_ICON_SIZE[0] / 4 + ((count + 2) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING)))  # Indent icons to the right of text    
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
@@ -229,7 +231,7 @@ def middle_layout(team, output_file="games.jpg"):
                         champ_img.putdata(new_data)
                     else: # Pick 1 & 2 & 3
                         pos = icon_x
-                    img.paste(champ_img, (pos, y_offset), champ_img)
+                    img.paste(champ_img, (int(pos), y_offset), champ_img)
                     if count == 2 or count == 4: 
                         icon_x += CHAMPION_ICON_SIZE[0] + ICON_SPACING + 40  # Space between icons
                     else:
@@ -248,7 +250,6 @@ def middle_layout(team, output_file="games.jpg"):
 
 # TODO
 # Get P for Placements and 1 from Week 1
-# Remove any static numbers
 
 def right_layout(team, output_file="simplify.jpg"):
     ICON_SPACING = 10  # Space between icons within a row
@@ -270,9 +271,9 @@ def right_layout(team, output_file="simplify.jpg"):
         draw.text((x_offset / 5, pos), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]: 
             if match['W/L'] == 'W' and match['team'] == our_team:
-                draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + 40)], fill="green")
+                draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="green")
             if match['W/L'] == 'L' and match['team'] == our_team:
-                draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + 40)], fill="red")
+                draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="red")
             if match['side'] == 'Blue' and match['team'] == 'Team1': # BLUE
                 # Place champion icons
                 icon_y = x_offset # Indent icons to the right of text
@@ -281,8 +282,6 @@ def right_layout(team, output_file="simplify.jpg"):
                     ID = champ.split(" ")
                     ID = ID[0]
                     ID = key[ID]
-                    # items = key[rng()]
-                    # items = str(items).split("'")
                     url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
                     champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
                     champ_img = champ_img.convert("RGBA")
@@ -310,8 +309,6 @@ def right_layout(team, output_file="simplify.jpg"):
                     ID = champ.split(" ")
                     ID = ID[0]       
                     ID = key[ID]             
-                    # items = key[rng()]
-                    # items = str(items).split("'")
                     url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
                     champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
                     champ_img = champ_img.convert("RGBA")
@@ -350,9 +347,9 @@ def bottom_layout(team, output_file="scout.jpg"):
     return 0
 
 def main():
-    # top_layout(team, output_file = "top.jpg")
-    middle_layout(team, output_file="mid.jpg")
-    right_layout(team, output_file="right.jpg")
+    top_layout(team, output_file = "top.jpg")
+    # middle_layout(team, output_file="mid.jpg")
+    # right_layout(team, output_file="right.jpg")
     # bottom_layout(team, output_file="mid.jpg")
 
 
