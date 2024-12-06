@@ -5,16 +5,16 @@ import random
 
 # Configuration for layout
 CHAMPION_ICON_SIZE = (40, 40)  # Width, Height of champion icons
+roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
 FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file 
 with open('championKey/champion_name_key_map.json', 'r') as file: #JSON to convert name to ID for URL lookup
     key = json.load(file)
-# key = list(key.items()) # FOR TESTING
 OUTPUT_IMAGE_SIZE = (1920, 1080)  # Output image dimensions
 ROW_SPACING = 40  # Space between rows within a section
 
 # Example match data
 our_team = 'Team1' # Team we are analyzing
-players = ["dawn", "great", "eletro", "max", "armed"]
+players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#COE", "armedchief#NA1"] # Starting roster we are analyzing
 team = [
     # {"section": "Example",
     #     "matches": [
@@ -27,22 +27,21 @@ team = [
                 "picks": ["vi J", "aatrox T", "monkeyking M", "warwick S", "ashe A", "jinx", "milio", "kogmaw", "masteryi", "belveth"]},
             {"team": "Team1", "W/L": "L", "side": "Red",
                 "picks": ["vi J", "aatrox T", "monkeyking M", "warwick S", "ashe A", "jinx", "milio", "kogmaw", "masteryi", "belveth"]},
-    #         {"team": "Team1", "W/L": "W", "side": "Blue",
-    #             "picks": ["vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi"]},
-    #         {"team": "Team", "W/L": "L", "side": "Red",
-    #             "picks": ["ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko"]},
-    #         {"team": "Team1", "W/L": "W", "side": "Blue",
-    #             "picks": ["vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi"]},
-    #         {"team": "Team", "W/L": "L", "side": "Red",
-    #             "picks": ["ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko"]},
-    # ]},
-    # {"section": "Week 1",
-    #     "matches": [
-    #         {"team": "Team1", "W/L": "L", "side": "Blue",
-    #             "picks": ["vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi"]},
-    #         {"team": "Team", "W/L": "W", "side": "Red",
-    #             "picks": ["ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko"]},
-    #         {"team": "Team", "W/L": "L", "side": "Blue",
+            # {"team": "Team1", "W/L": "W", "side": "Blue",
+            #     "picks": ["vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi"]},
+            # {"team": "Team", "W/L": "L", "side": "Red",
+            #     "picks": ["ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko"]},
+            # {"team": "Team1", "W/L": "W", "side": "Blue",
+            #     "picks": ["vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi"]},
+            # {"team": "Team", "W/L": "L", "side": "Red",
+            #     "picks": ["ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko"]},
+    ]},
+    {"section": "Week 1",
+        "matches": [
+            {"team": "Team1", "W/L": "W", "side": "Blue",
+                "picks": ["vi J", "aatrox T", "monkeyking M", "warwick S", "ashe A", "jinx", "milio", "kogmaw", "masteryi", "belveth"]},
+            {"team": "Team1", "W/L": "L", "side": "Red",
+                "picks": ["vi J", "aatrox T", "monkeyking M", "warwick S", "ashe A", "jinx", "milio", "kogmaw", "masteryi", "belveth"]},
     #             "picks": ["vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi", "vi"]},
     #         {"team": "Team1", "W/L": "W", "side": "Red",
     #             "picks": ["ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko", "ekko"]},
@@ -59,9 +58,8 @@ def rng():
     return random.randint(1,50)
 
 # TODO
-# Subs?
 # Names from right to left instead of left to right
-# Colors
+# Colors w/ Ranks and W/L
 
 def top_layout(team, output_file="positions.jpg"):
     GAME_SPACING = 10 #Space between teams (Blue and Red)
@@ -69,30 +67,24 @@ def top_layout(team, output_file="positions.jpg"):
 
     # Load a font for text
     font = ImageFont.truetype(FONT_PATH, 20)
-    x_margin, y_margin = 50, 50  # Starting positions
-    x_offset = x_margin
-    y_offset = y_margin
     count = 0
+    x_margin, y_margin = 50, 50  # Starting positions
+    x_offset, y_offset = x_margin, y_margin
     icon_x = x_margin + 100  # Indent icons to the right of text
 
     # Create a blank canvas
     img = Image.new("RGB", (int(x_offset * 2 + (30 * (CHAMPION_ICON_SIZE[0] * 1.25) + GAME_SPACING) + 10 * SECTION_SPACING), int(y_offset * 1.2 + 5 * (CHAMPION_ICON_SIZE[1] * 1.25))), "beige")
     draw = ImageDraw.Draw(img)
-    
-
     for player in players:
-    # Calculate the bounding box of the text to get the width
-        bbox = draw.textbbox((0, 0), player.upper(), font=font)
-        text_width = bbox[2] - bbox[0]  # bbox[2] is the right side, bbox[0] is the left side
-
-        # Calculate the vertical position
         pos = y_offset * 1.1 + (count * CHAMPION_ICON_SIZE[1] * 1.25)
-        
-        # Draw text right-aligned by subtracting text width from the x_offset
-        draw.text((x_offset - text_width, pos), player.upper(), fill="black", font=font)
-
+        draw.text((x_offset, pos), player.upper(), fill="black", font=font)
         count += 1
     for section in team:
+        if "Week" in section["section"]:
+            temp = section["section"].split(" ")
+            draw.text((x_offset / 5, pos), (temp[1]).upper(), fill="black", font=font)
+        else:
+            draw.text((x_offset / 5, pos), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]:
             count = 1
             # Place champion icons
@@ -214,7 +206,7 @@ def middle_layout(team, output_file="games.jpg"):
                         icon_x += CHAMPION_ICON_SIZE[0] / 4 + 3 * (CHAMPION_ICON_SIZE[0] + ICON_SPACING)
                         pos = icon_x
                     elif count == 6 or count == 7 or count == 8: # Ban 1 & 2 & 3
-                        pos = x_offset + CHAMPION_ICON_SIZE[0] / 4 + ((count - 4) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING)))  # Indent icons to the right of text    
+                        pos = x_offset + CHAMPION_ICON_SIZE[0] / 2 + ((count - 4) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING)))  # Indent icons to the right of text    
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
@@ -222,7 +214,7 @@ def middle_layout(team, output_file="games.jpg"):
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     elif count == 9 or count == 10: # Ban 4 & 5
-                        pos = x_offset - CHAMPION_ICON_SIZE[0] / 4 + ((count + 2) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING)))  # Indent icons to the right of text    
+                        pos = x_offset - CHAMPION_ICON_SIZE[0] / 2 + ((count + 2) * ((CHAMPION_ICON_SIZE[0] + ICON_SPACING)))  # Indent icons to the right of text    
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
@@ -249,17 +241,18 @@ def middle_layout(team, output_file="games.jpg"):
     print(f"Layout saved as {output_file}")
 
 # TODO
-# Get P for Placements and 1 from Week 1
+# Font Color, Then Ready
 
 def right_layout(team, output_file="simplify.jpg"):
     ICON_SPACING = 10  # Space between icons within a row
     GAME_SPACING = int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)) #Space between teams (Blue and Red)
     SECTION_SPACING = int((CHAMPION_ICON_SIZE[1] / 2))  # Space between sections (e.g., Placement Matches, Week 1, etc.)
+    OUTPUT_IMAGE_SIZE = (1920, 1080)  # Output image dimensions
     # Create a blank canvas
-    img = Image.new("RGB", (750, 1200), (207, 191, 163))
+    img = Image.new("RGB", (19 * CHAMPION_ICON_SIZE[1], 1200), (207, 191, 163))
     draw = ImageDraw.Draw(img)
     # Load a font for text
-    font = ImageFont.truetype(FONT_PATH, 20)
+    font = ImageFont.truetype(FONT_PATH, 50)
     
     x_margin, y_margin = 50, 50  # Starting positions
     x_offset = x_margin
@@ -267,14 +260,18 @@ def right_layout(team, output_file="simplify.jpg"):
     
     for section in team:
         # Draw section title
-        pos = y_offset + int(((len(section["matches"]) * GAME_SPACING) / 4) - 20)
-        draw.text((x_offset / 5, pos), (section["section"][0]).upper(), fill="black", font=font)
+        pos = y_offset + int(((len(section["matches"]) * GAME_SPACING) / 2) - 35)
+        if "Week" in section["section"]:
+            temp = section["section"].split(" ")
+            draw.text((x_offset / 6, pos), (temp[1]).upper(), fill="black", font=font)
+        else:
+            draw.text((x_offset / 6, pos), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]: 
             if match['W/L'] == 'W' and match['team'] == our_team:
                 draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="green")
             if match['W/L'] == 'L' and match['team'] == our_team:
                 draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="red")
-            if match['side'] == 'Blue' and match['team'] == 'Team1': # BLUE
+            if match['side'] == 'Blue' and match['team'] == our_team: # BLUE
                 # Place champion icons
                 icon_y = x_offset # Indent icons to the right of text
                 count = 1
@@ -301,7 +298,7 @@ def right_layout(team, output_file="simplify.jpg"):
                         icon_y += CHAMPION_ICON_SIZE[1] + ICON_SPACING
                     count += 1
                 y_offset += GAME_SPACING  # Move to the next row
-            if match['side'] == 'Red' and match['team'] == 'Team1': # RED
+            if match['side'] == 'Red' and match['team'] == our_team: # RED
                 # Place champion icons
                 icon_y = x_offset  # Indent icons to the right of text
                 count = 1
@@ -348,7 +345,7 @@ def bottom_layout(team, output_file="scout.jpg"):
 
 def main():
     top_layout(team, output_file = "top.jpg")
-    # middle_layout(team, output_file="mid.jpg")
+    middle_layout(team, output_file="mid.jpg")
     # right_layout(team, output_file="right.jpg")
     # bottom_layout(team, output_file="mid.jpg")
 
