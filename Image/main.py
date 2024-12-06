@@ -2,11 +2,6 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 import json
 
-# TODO
-# Bottom Part = Recent 10 matches in Ranked Solo andor Ranked Flex
-# Split to Top / Right / Middle / Bottom? Parts
-
-
 # Configuration for layout
 CHAMPION_ICON_SIZE = (40, 40)  # Width, Height of champion icons
 FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file (e.g., Arial.ttf or DejaVuSans.ttf)
