@@ -1,7 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 import requests
 import json
-import random
+from creds import *
+
 
 # Configuration for layout
 CHAMPION_ICON_SIZE = (40, 40)  # Width, Height of champion icons
@@ -11,10 +12,11 @@ with open('championKey/champion_name_key_map.json', 'r') as file: #JSON to conve
     key = json.load(file)
 OUTPUT_IMAGE_SIZE = (1920, 1080)  # Output image dimensions
 ROW_SPACING = 40  # Space between rows within a section
+cred = cred()
 
 # Example match data
 our_team = 'Team1' # Team we are analyzing
-players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#COE", "armedchief#NA1"] # Starting roster we are analyzing
+players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#COE", "armedchief#2001"] # Starting roster we are analyzing
 team = [
     # {"section": "Example",
     #     "matches": [
@@ -53,13 +55,13 @@ team = [
     # Add more sections and rows as needed...
 ]
 
-
-def rng():
-    return random.randint(1,50)
+# GLOBAL TODO
+# Resize everything so it matches the original size of the icons
+# Font Color, Then Ready
 
 # TODO
 # Names from right to left instead of left to right
-# Colors w/ Ranks and W/L
+# Add Emerald & make icons transparent
 
 def top_layout(team, output_file="positions.jpg"):
     GAME_SPACING = 10 #Space between teams (Blue and Red)
@@ -76,16 +78,34 @@ def top_layout(team, output_file="positions.jpg"):
     img = Image.new("RGB", (int(x_offset * 2 + (30 * (CHAMPION_ICON_SIZE[0] * 1.25) + GAME_SPACING) + 10 * SECTION_SPACING), int(y_offset * 1.2 + 5 * (CHAMPION_ICON_SIZE[1] * 1.25))), "beige")
     draw = ImageDraw.Draw(img)
     for player in players:
+        temp = player.split("#")
+        rank = requests.get(f"https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/{requests.get(f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{temp[0]}/{temp[1]}?api_key={cred}").json()['puuid']}?api_key={cred}").json()['id']}?api_key={cred}").json()
+        for queue in rank:
+            if queue["queueType"] == "RANKED_SOLO_5x5":
+                rank = queue["tier"].lower()[0].upper() + queue["tier"].lower()[1:]
+        print(rank)
         pos = y_offset * 1.1 + (count * CHAMPION_ICON_SIZE[1] * 1.25)
-        draw.text((x_offset, pos), player.upper(), fill="black", font=font)
+        # draw.text((x_offset, pos), player.upper(), fill="black", font=font)
+        if rank == "Platinum":
+            rank = "Plat"
+        if rank == "Emerald":
+            rank = "Diamond"
+        icon_path = f"positions/Position_{rank}-{roles[count]}.png"
+        icon = Image.open(icon_path).resize(CHAMPION_ICON_SIZE)
+        img.paste(icon, ((icon_x - CHAMPION_ICON_SIZE[0] - GAME_SPACING), int(y_offset + count * (CHAMPION_ICON_SIZE[1] * 1.25))))
         count += 1
     for section in team:
         if "Week" in section["section"]:
             temp = section["section"].split(" ")
-            draw.text((x_offset / 5, pos), (temp[1]).upper(), fill="black", font=font)
+            draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)))) / 2) - 30) * 2, 15 + ( 7 * CHAMPION_ICON_SIZE[1])), (temp[1]).upper(), fill="black", font=font)
         else:
-            draw.text((x_offset / 5, pos), (section["section"][0]).upper(), fill="black", font=font)
+            draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)))) / 2) - 30) * 2, 15 + (7 * CHAMPION_ICON_SIZE[1])), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]:
+            if match['W/L'] == 'W' and match['team'] == our_team:
+                WL = "green"
+            elif match['W/L'] == 'L' and match['team'] == our_team:
+                WL = "red"
+            draw.rectangle([(icon_x - 2, y_offset + int(CHAMPION_ICON_SIZE[0] * 6)), icon_x + 1 + CHAMPION_ICON_SIZE[0], y_offset + int(CHAMPION_ICON_SIZE[0] * 6) + 5], fill= WL)
             count = 1
             # Place champion icons
             for champ in match["picks"]:
@@ -106,6 +126,7 @@ def top_layout(team, output_file="positions.jpg"):
                         pos = y_offset + 3 * (CHAMPION_ICON_SIZE[1] * 1.25)
                     elif champion[1] == "S":
                         pos = y_offset + 4 * (CHAMPION_ICON_SIZE[1] * 1.25)
+                    draw.rectangle([(icon_x - 2, int(pos - 2)), (icon_x + 41, int(pos) + 41)], fill=WL)
                     img.paste(champ_img, (icon_x, int(pos)))
                     count += 1
                 else:
@@ -240,9 +261,6 @@ def middle_layout(team, output_file="games.jpg"):
     img.save(output_file)
     print(f"Layout saved as {output_file}")
 
-# TODO
-# Font Color, Then Ready
-
 def right_layout(team, output_file="simplify.jpg"):
     ICON_SPACING = 10  # Space between icons within a row
     GAME_SPACING = int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)) #Space between teams (Blue and Red)
@@ -290,10 +308,12 @@ def right_layout(team, output_file="simplify.jpg"):
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     img.paste(champ_img, (icon_y, y_offset), champ_img)
-                    if count == 3:
+                    if count == 5:
+                        icon_y += int(CHAMPION_ICON_SIZE[1] / 1.5)
+                    if count == 3 or count == 8:
                         icon_y += int(CHAMPION_ICON_SIZE[1] / 2)
-                    if count == 1 or count == 3 or count == 5 or count == 8: # first pick, 2 picks, then 2 picks. 3 bans, then 2 bans 
-                        icon_y += CHAMPION_ICON_SIZE[1] + ICON_SPACING + CHAMPION_ICON_SIZE[1]  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick 
+                    if count == 1 or count == 3: # first pick, 2 picks, then 2 picks. 3 bans, then 2 bans 
+                        icon_y += (CHAMPION_ICON_SIZE[1] + ICON_SPACING) * 2  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick 
                     else:
                         icon_y += CHAMPION_ICON_SIZE[1] + ICON_SPACING
                     count += 1
@@ -317,10 +337,12 @@ def right_layout(team, output_file="simplify.jpg"):
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     img.paste(champ_img, (icon_y, y_offset), champ_img)
-                    if count == 3:
+                    if count == 5:
+                        icon_y += int(CHAMPION_ICON_SIZE[1] / 1.5)
+                    if count == 3 or count == 8:
                         icon_y += int(CHAMPION_ICON_SIZE[1] / 2)
-                    if count == 2 or count == 4 or count == 5 or count == 8: # 2 picks, 2 picks, then last pick. 3 bans, then 2 bans
-                        icon_y += CHAMPION_ICON_SIZE[1] + ICON_SPACING + CHAMPION_ICON_SIZE[1]  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick
+                    if count == 2 or count == 4: # 2 picks, 2 picks, then last pick. 3 bans, then 2 bans
+                        icon_y += (CHAMPION_ICON_SIZE[1] + ICON_SPACING) * 2  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick
                     else:
                         icon_y += CHAMPION_ICON_SIZE[1] + ICON_SPACING
                     count += 1
@@ -345,7 +367,7 @@ def bottom_layout(team, output_file="scout.jpg"):
 
 def main():
     top_layout(team, output_file = "top.jpg")
-    middle_layout(team, output_file="mid.jpg")
+    # middle_layout(team, output_file="mid.jpg")
     # right_layout(team, output_file="right.jpg")
     # bottom_layout(team, output_file="mid.jpg")
 
