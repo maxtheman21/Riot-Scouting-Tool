@@ -5,7 +5,7 @@ from creds import *
 
 
 # Configuration for layout
-CHAMPION_ICON_SIZE = (100, 100)  # Width, Height of champion icons
+CHAMPION_ICON_SIZE = (200, 200)  # Width, Height of champion icons
 roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
 FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file 
 with open('championKey/champion_name_key_map.json', 'r') as file: #JSON to convert name to ID for URL lookup
@@ -268,20 +268,19 @@ def right_layout(team, output_file="simplify.jpg"):
     ICON_SPACING = 10  # Space between icons within a row
     GAME_SPACING = int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)) #Space between teams (Blue and Red)
     SECTION_SPACING = int((CHAMPION_ICON_SIZE[1] / 2))  # Space between sections (e.g., Placement Matches, Week 1, etc.)
-    OUTPUT_IMAGE_SIZE = (1920, 1080)  # Output image dimensions
     # Create a blank canvas
-    img = Image.new("RGB", (19 * CHAMPION_ICON_SIZE[1], 1200), (207, 191, 163))
+    img = Image.new("RGB", (20 * CHAMPION_ICON_SIZE[1], 30 * CHAMPION_ICON_SIZE[1]), (207, 191, 163))
     draw = ImageDraw.Draw(img)
     # Load a font for text
-    font = ImageFont.truetype(FONT_PATH, 50)
+    font = ImageFont.truetype(FONT_PATH, CHAMPION_ICON_SIZE[1] * 0.5)
     
-    x_margin, y_margin = 50, 50  # Starting positions
+    x_margin, y_margin = int(CHAMPION_ICON_SIZE[1] * 0.5), int(CHAMPION_ICON_SIZE[1] * 0.5)  # Starting positions
     x_offset = x_margin
     y_offset = y_margin
     
     for section in team:
         # Draw section title
-        pos = y_offset + int(((len(section["matches"]) * GAME_SPACING) / 2) - 35)
+        pos = y_offset + int(((len(section["matches"]) * GAME_SPACING) / 2) - CHAMPION_ICON_SIZE[1] * 0.35)
         if "Week" in section["section"]:
             temp = section["section"].split(" ")
             draw.text((x_offset / 6, pos), (temp[1]).upper(), fill="black", font=font)
@@ -289,9 +288,9 @@ def right_layout(team, output_file="simplify.jpg"):
             draw.text((x_offset / 6, pos), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]: 
             if match['W/L'] == 'W' and match['team'] == our_team:
-                draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="green")
+                draw.rectangle([(x_offset - CHAMPION_ICON_SIZE[1] * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="green")
             if match['W/L'] == 'L' and match['team'] == our_team:
-                draw.rectangle([(x_offset - 10, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="red")
+                draw.rectangle([(x_offset - CHAMPION_ICON_SIZE[1] * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE[0])], fill="red")
             if match['side'] == 'Blue' and match['team'] == our_team: # BLUE
                 # Place champion icons
                 icon_y = x_offset # Indent icons to the right of text
@@ -373,9 +372,9 @@ def master_image(college):
 
 # Work on combining all these images together w/ team name as outputfile
 def main():
-    top_layout(team, output_file = "top.jpg")
+    # top_layout(team, output_file = "top.jpg")
     # middle_layout(team, output_file="mid.jpg")
-    # right_layout(team, output_file="right.jpg")
+    right_layout(team, output_file="right.jpg")
     # bottom_layout(team, output_file="mid.jpg")
     # master_image(team name)
 
