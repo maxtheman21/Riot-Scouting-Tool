@@ -13,7 +13,7 @@ with open('Image\data.json', 'r') as file:
     team = json.load(file)
 
 roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
-players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "eletro#6841", "armedchief#2001"] # Starting roster we are analyzing (Sample)
+players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#coe", "armedchief#2001"] # Starting roster we are analyzing (Sample)
 FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file 
 College = "Coe"
 CHAMPION_ICON_SIZE = 500 # Width, Height of champion icons
@@ -27,20 +27,20 @@ CHAMPION_ICON_SIZE = 500 # Width, Height of champion icons
 
 def top_layout(team, output_file="positions.jpg"):
     longest = ""
-    GAME_SPACING = 10 #Space between teams (Blue and Red)
-    SECTION_SPACING = 20  # Space between sections (e.g., Placement Matches, Week 1, etc.)
+    GAME_SPACING = int(CHAMPION_ICON_SIZE * 0.15) #Space between teams (Blue and Red)
+    SECTION_SPACING = int(CHAMPION_ICON_SIZE * 0.5)  # Space between sections (e.g., Placement Matches, Week 1, etc.)
 
     # Load a font for text
     font = ImageFont.truetype(FONT_PATH, CHAMPION_ICON_SIZE)
     count = 0
-    x_margin, y_margin = 10, 50  # Starting positions
+    x_margin, y_margin = CHAMPION_ICON_SIZE * 0.25, CHAMPION_ICON_SIZE * 1.25  # Starting positions
     x_offset, y_offset = x_margin, y_margin
     for player in players:
         if len(player) > len(longest): 
             longest = player.upper() # Grabs the longest username
     for char in longest:
         x_offset += font.getbbox(char)[2] # Offsets everything by that username
-    icon_x = int(x_offset + CHAMPION_ICON_SIZE * 1.5)  # Indent icons to the right of text
+    icon_x = int(x_offset + CHAMPION_ICON_SIZE * 1.01)  # Indent icons to the right of text
 
     # Create a blank canvas
     img = Image.new("RGB", (int(x_offset * 2 + (30 * (CHAMPION_ICON_SIZE * 1.25) + GAME_SPACING) + 10 * SECTION_SPACING), int(y_offset * 1.2 + 5 * (CHAMPION_ICON_SIZE * 1.25))), "beige")
@@ -65,7 +65,7 @@ def top_layout(team, output_file="positions.jpg"):
             char_width = font.getbbox(char)[2]  # Get the width of the character
             x -= char_width  # Move left for the next character
             draw.text((x, pos - CHAMPION_ICON_SIZE * 0.1), char, font=font, fill="black")
-        if rank == "": # If unranked
+        if not rank: # If unranked
             rank = "Iron"
         icon_path = f"positions/Position_{rank}-{roles[count]}.png"
         icon = Image.open(icon_path).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
@@ -82,7 +82,7 @@ def top_layout(team, output_file="positions.jpg"):
                 WL = "green"
             elif match['W/L'] == 'L' and match['team'] == College:
                 WL = "red"
-            draw.rectangle([(icon_x - 2, y_offset + int(CHAMPION_ICON_SIZE * 6)), icon_x + 1 + CHAMPION_ICON_SIZE, y_offset + int(CHAMPION_ICON_SIZE * 6) + 5], fill= WL)
+            draw.rectangle([(icon_x - 2, y_offset + int(CHAMPION_ICON_SIZE * 6)), icon_x + 1 + CHAMPION_ICON_SIZE, y_offset + int(CHAMPION_ICON_SIZE * 6) + CHAMPION_ICON_SIZE * 0.1], fill= WL)
             count = 1
             # Place champion icons
             for champ in match["picks"]:
@@ -357,9 +357,9 @@ def master_image(college):
 
 # Work on combining all these images together w/ team name as outputfile
 def main():
-    # top_layout(team, output_file = "top.jpg")
+    top_layout(team, output_file = "top.jpg")
     # middle_layout(team, output_file="mid.jpg")
-    right_layout(team, output_file="right.jpg")
+    # right_layout(team, output_file="right.jpg")
     # bottom_layout(team, output_file="mid.jpg")
     # master_image(team name)
 
