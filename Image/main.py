@@ -5,7 +5,7 @@ from creds import *
 
 
 # Configuration for layout
-CHAMPION_ICON_SIZE = (40, 40)  # Width, Height of champion icons
+CHAMPION_ICON_SIZE = (100, 100)  # Width, Height of champion icons
 roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
 FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file 
 with open('championKey/champion_name_key_map.json', 'r') as file: #JSON to convert name to ID for URL lookup
@@ -16,7 +16,7 @@ cred = cred()
 
 # Example match data
 our_team = 'Team1' # Team we are analyzing
-players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#COE", "armedchief#2001"] # Starting roster we are analyzing
+players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "eletro#6841", "armedchief#2001"] # Starting roster we are analyzing
 team = [
     # {"section": "Example",
     #     "matches": [
@@ -59,47 +59,52 @@ team = [
 # Resize everything so it matches the original size of the icons
 # Font Color, Then Ready
 
-# TODO
-# Names from right to left instead of left to right
-# Add Emerald & make icons transparent
-
 def top_layout(team, output_file="positions.jpg"):
+    longest = ""
     GAME_SPACING = 10 #Space between teams (Blue and Red)
     SECTION_SPACING = 20  # Space between sections (e.g., Placement Matches, Week 1, etc.)
 
     # Load a font for text
-    font = ImageFont.truetype(FONT_PATH, 20)
+    font = ImageFont.truetype(FONT_PATH, CHAMPION_ICON_SIZE[1])
     count = 0
-    x_margin, y_margin = 50, 50  # Starting positions
+    x_margin, y_margin = 10, 50  # Starting positions
     x_offset, y_offset = x_margin, y_margin
-    icon_x = x_margin + 100  # Indent icons to the right of text
+    for player in players:
+        if len(player) > len(longest): 
+            longest = player.upper() # Grabs the longest username
+    for char in longest:
+        x_offset += font.getbbox(char)[2] # Offsets everything by that username
+    icon_x = int(x_offset + CHAMPION_ICON_SIZE[0] * 1.5)  # Indent icons to the right of text
 
     # Create a blank canvas
     img = Image.new("RGB", (int(x_offset * 2 + (30 * (CHAMPION_ICON_SIZE[0] * 1.25) + GAME_SPACING) + 10 * SECTION_SPACING), int(y_offset * 1.2 + 5 * (CHAMPION_ICON_SIZE[1] * 1.25))), "beige")
     draw = ImageDraw.Draw(img)
+    
     for player in players:
         temp = player.split("#")
         rank = requests.get(f"https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/{requests.get(f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{temp[0]}/{temp[1]}?api_key={cred}").json()['puuid']}?api_key={cred}").json()['id']}?api_key={cred}").json()
         for queue in rank:
-            if queue["queueType"] == "RANKED_SOLO_5x5":
-                rank = queue["tier"].lower()[0].upper() + queue["tier"].lower()[1:]
-        print(rank)
-        pos = y_offset * 1.1 + (count * CHAMPION_ICON_SIZE[1] * 1.25)
-        # draw.text((x_offset, pos), player.upper(), fill="black", font=font)
-        if rank == "Platinum":
-            rank = "Plat"
-        if rank == "Emerald":
-            rank = "Diamond"
+            if queue["queueType"] == "RANKED_SOLO_5x5": # Find Solo Queue
+                rank = queue["tier"].lower()[0].upper() + queue["tier"].lower()[1:] # Finds ranked
+        pos = y_offset * 1.1 + (count * CHAMPION_ICON_SIZE[1] * 1.25) # Offsets for positions
+        player = player.upper() # Upper
+        x = x_offset
+        for char in player[::-1]:
+            char_width = font.getbbox(char)[2]  # Get the width of the character
+            x -= char_width  # Move left for the next character
+            draw.text((x, pos - CHAMPION_ICON_SIZE[1] * 0.1), char, font=font, fill="black")
+        if rank == "": # If unranked
+            rank = "Iron"
         icon_path = f"positions/Position_{rank}-{roles[count]}.png"
         icon = Image.open(icon_path).resize(CHAMPION_ICON_SIZE)
-        img.paste(icon, ((icon_x - CHAMPION_ICON_SIZE[0] - GAME_SPACING), int(y_offset + count * (CHAMPION_ICON_SIZE[1] * 1.25))))
+        img.paste(icon, ((icon_x - CHAMPION_ICON_SIZE[0] - GAME_SPACING), int(y_offset + count * (CHAMPION_ICON_SIZE[1] * 1.25))), mask= icon) # Pastes Role Icon
         count += 1
     for section in team:
         if "Week" in section["section"]:
             temp = section["section"].split(" ")
-            draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)))) / 2) - 30) * 2, 15 + ( 7 * CHAMPION_ICON_SIZE[1])), (temp[1]).upper(), fill="black", font=font)
+            draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)))) / 2) - CHAMPION_ICON_SIZE[1] * 0.75) * 2,   CHAMPION_ICON_SIZE[1] * 0.375 + ( 7 * CHAMPION_ICON_SIZE[1])), (temp[1]).upper(), fill="black", font=font)
         else:
-            draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)))) / 2) - 30) * 2, 15 + (7 * CHAMPION_ICON_SIZE[1])), (section["section"][0]).upper(), fill="black", font=font)
+            draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE[1] + (CHAMPION_ICON_SIZE[1] / 4)))) / 2) - CHAMPION_ICON_SIZE[1] * 0.75) * 2, CHAMPION_ICON_SIZE[1] * 0.375 + (7 * CHAMPION_ICON_SIZE[1])), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]:
             if match['W/L'] == 'W' and match['team'] == our_team:
                 WL = "green"
@@ -111,9 +116,7 @@ def top_layout(team, output_file="positions.jpg"):
             for champ in match["picks"]:
                 if count <= 5:
                     champion = champ.split(" ")
-                    ID = key[champion[0]]            
-                    # items = key[rng()]
-                    # items = str(items).split("'")
+                    ID = key[champion[0]]          
                     url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
                     champ_img = Image.open(requests.get(url, stream=True).raw).resize(CHAMPION_ICON_SIZE)
                     if champion[1] == "T":
@@ -126,7 +129,7 @@ def top_layout(team, output_file="positions.jpg"):
                         pos = y_offset + 3 * (CHAMPION_ICON_SIZE[1] * 1.25)
                     elif champion[1] == "S":
                         pos = y_offset + 4 * (CHAMPION_ICON_SIZE[1] * 1.25)
-                    draw.rectangle([(icon_x - 2, int(pos - 2)), (icon_x + 41, int(pos) + 41)], fill=WL)
+                    draw.rectangle([(icon_x - 2, int(pos - 2)), (icon_x + CHAMPION_ICON_SIZE[0]* 1.01, int(pos) + CHAMPION_ICON_SIZE[1]* 1.01)], fill=WL)
                     img.paste(champ_img, (icon_x, int(pos)))
                     count += 1
                 else:
@@ -365,11 +368,16 @@ def bottom_layout(team, output_file="scout.jpg"):
     #Complex
     return 0
 
+def master_image(college):
+    return 0
+
+# Work on combining all these images together w/ team name as outputfile
 def main():
     top_layout(team, output_file = "top.jpg")
     # middle_layout(team, output_file="mid.jpg")
     # right_layout(team, output_file="right.jpg")
     # bottom_layout(team, output_file="mid.jpg")
+    # master_image(team name)
 
 
 main()
