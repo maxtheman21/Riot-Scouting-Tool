@@ -1,0 +1,26 @@
+{
+    "College": [
+        {
+            "section": "Example",
+            "matches": [
+              {
+                "team": "Team name",
+                "W/L": "W for Win or L for Loss",
+                "side": "Blue or Red",
+                "picks": [
+                  "Pick1 (T)op",
+                  "Pick2 (J)ungle",
+                  "Pick3 (M)iddle",
+                  "Pick4 (A)DC",
+                  "Pick5 (S)upport",
+                  "Ban1",
+                  "Ban2",
+                  "Ban3",
+                  "Ban4",
+                  "Ban5"
+                ]
+              }
+            ]
+          }
+    ]
+}
