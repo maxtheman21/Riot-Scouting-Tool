@@ -15,8 +15,8 @@ with open('Image\data.json', 'r') as file:
 roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
 players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#coe", "armedchief#2001"] # Starting roster we are analyzing (Sample)
 FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file 
-College = "Coe"
-CHAMPION_ICON_SIZE = 500 # Width, Height of champion icons
+college = "Coe"
+CHAMPION_ICON_SIZE = 200 # Width, Height of champion icons
 
 
 
@@ -25,25 +25,36 @@ CHAMPION_ICON_SIZE = 500 # Width, Height of champion icons
 # Resize everything so it matches the original size of the icons
 # Font Color, Then Ready
 
-def top_layout(team, output_file="positions.jpg"):
-    longest = ""
+def top_layout(team, output_file="positions.png"):
+    longest = 0
+    count = 0
+    scount = 0
+    gcount = 0
     GAME_SPACING = int(CHAMPION_ICON_SIZE * 0.15) #Space between teams (Blue and Red)
     SECTION_SPACING = int(CHAMPION_ICON_SIZE * 0.5)  # Space between sections (e.g., Placement Matches, Week 1, etc.)
-
-    # Load a font for text
-    font = ImageFont.truetype(FONT_PATH, CHAMPION_ICON_SIZE)
-    count = 0
+    font = ImageFont.truetype(FONT_PATH, int(CHAMPION_ICON_SIZE * 0.5))
     x_margin, y_margin = CHAMPION_ICON_SIZE * 0.25, CHAMPION_ICON_SIZE * 1.25  # Starting positions
     x_offset, y_offset = x_margin, y_margin
+
+
     for player in players:
-        if len(player) > len(longest): 
-            longest = player.upper() # Grabs the longest username
-    for char in longest:
-        x_offset += font.getbbox(char)[2] # Offsets everything by that username
+        length = 0
+        player = player.upper()
+        for char in player:
+            length += font.getbbox(char)[2]
+        if length > longest:
+            longest = length
+    x_offset += longest + CHAMPION_ICON_SIZE * 0.1 # Offsets everything by that username
+
     icon_x = int(x_offset + CHAMPION_ICON_SIZE * 1.01)  # Indent icons to the right of text
 
+    for section in team[college]:
+        scount += 1
+        for i in section["matches"]:
+            gcount += 1
+
     # Create a blank canvas
-    img = Image.new("RGB", (int(x_offset * 2 + (30 * (CHAMPION_ICON_SIZE * 1.25) + GAME_SPACING) + 10 * SECTION_SPACING), int(y_offset * 1.2 + 5 * (CHAMPION_ICON_SIZE * 1.25))), "beige")
+    img = Image.new("RGBA", (int(x_offset + ((1 + gcount) * (CHAMPION_ICON_SIZE + GAME_SPACING) + scount * SECTION_SPACING)), int(y_offset * 1.8 + 5 * (CHAMPION_ICON_SIZE * 1.25))), (0, 0, 0, 0,))
     draw = ImageDraw.Draw(img)
     
     for player in players:
@@ -60,11 +71,11 @@ def top_layout(team, output_file="positions.jpg"):
                 rank = queue["tier"].lower()[0].upper() + queue["tier"].lower()[1:] # Finds ranked
         pos = y_offset * 1.1 + (count * CHAMPION_ICON_SIZE * 1.25) # Offsets for positions
         player = player.upper() # Upper
-        x = x_offset
+        x = x_offset - CHAMPION_ICON_SIZE * 0.1
         for char in player[::-1]:
             char_width = font.getbbox(char)[2]  # Get the width of the character
             x -= char_width  # Move left for the next character
-            draw.text((x, pos - CHAMPION_ICON_SIZE * 0.1), char, font=font, fill="black")
+            draw.text((x, pos), char, font=font, fill="black")
         if not rank: # If unranked
             rank = "Iron"
         icon_path = f"positions/Position_{rank}-{roles[count]}.png"
@@ -78,11 +89,11 @@ def top_layout(team, output_file="positions.jpg"):
         else:
             draw.text((icon_x + int(((len(section["matches"]) * (int(CHAMPION_ICON_SIZE + (CHAMPION_ICON_SIZE / 4)))) / 2) - CHAMPION_ICON_SIZE * 0.75) * 2, CHAMPION_ICON_SIZE * 0.375 + (7 * CHAMPION_ICON_SIZE)), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]:
-            if match['W/L'] == 'W' and match['team'] == College:
+            if match['W/L'] == 'W' and match['team'] == college:
                 WL = "green"
-            elif match['W/L'] == 'L' and match['team'] == College:
+            elif match['W/L'] == 'L' and match['team'] == college:
                 WL = "red"
-            draw.rectangle([(icon_x - 2, y_offset + int(CHAMPION_ICON_SIZE * 6)), icon_x + 1 + CHAMPION_ICON_SIZE, y_offset + int(CHAMPION_ICON_SIZE * 6) + CHAMPION_ICON_SIZE * 0.1], fill= WL)
+            draw.rectangle([(icon_x - CHAMPION_ICON_SIZE * 0.03, y_offset + int(CHAMPION_ICON_SIZE * 6)), icon_x + CHAMPION_ICON_SIZE * 1.03, y_offset + int(CHAMPION_ICON_SIZE * 6) + CHAMPION_ICON_SIZE * 0.1], fill= WL)
             count = 1
             # Place champion icons
             for champ in match["picks"]:
@@ -101,7 +112,7 @@ def top_layout(team, output_file="positions.jpg"):
                         pos = y_offset + 3 * (CHAMPION_ICON_SIZE * 1.25)
                     elif champion[1] == "S":
                         pos = y_offset + 4 * (CHAMPION_ICON_SIZE * 1.25)
-                    draw.rectangle([(icon_x - 2, int(pos - 2)), (icon_x + CHAMPION_ICON_SIZE* 1.01, int(pos) + CHAMPION_ICON_SIZE* 1.01)], fill=WL)
+                    draw.rectangle([(icon_x - CHAMPION_ICON_SIZE * 0.03, int(pos - CHAMPION_ICON_SIZE * 0.03)), (icon_x + CHAMPION_ICON_SIZE * 1.03, int(pos) + CHAMPION_ICON_SIZE* 1.03)], fill=WL)
                     img.paste(champ_img, (icon_x, int(pos)))
                     count += 1
                 else:
@@ -121,7 +132,7 @@ def top_layout(team, output_file="positions.jpg"):
 # KDAs
 # Lines
 
-def middle_layout(team, output_file="games.jpg"):
+def middle_layout(team, output_file="games.png"):
     ROW_SPACING = CHAMPION_ICON_SIZE  # Space between rows within a section
     ICON_SPACING = int(CHAMPION_ICON_SIZE * 0.25)  # Space between icons within a row
     GAME_SPACING = int(CHAMPION_ICON_SIZE * 0.75) #Space between teams (Blue and Red)
@@ -135,7 +146,7 @@ def middle_layout(team, output_file="games.jpg"):
     for section in team["Coe"]:
         for i in section["matches"]:
             count += 1
-    img = Image.new("RGB", (int(21.5*CHAMPION_ICON_SIZE), int(count*2*CHAMPION_ICON_SIZE + y_offset)), (207, 191, 163))
+    img = Image.new("RGBA", (int(21.5*CHAMPION_ICON_SIZE), int(count*2*CHAMPION_ICON_SIZE + y_offset)), (0, 0, 0 ,0))
     draw = ImageDraw.Draw(img)
 
     # Load a font for text
@@ -242,7 +253,7 @@ def middle_layout(team, output_file="games.jpg"):
     img.save(output_file)
     print(f"Layout saved as {output_file}")
 
-def right_layout(team, output_file="simplify.jpg"):
+def right_layout(team, output_file="simplify.png"):
     ICON_SPACING = int(CHAMPION_ICON_SIZE * 0.15)  # Space between icons within a row
     GAME_SPACING = int(CHAMPION_ICON_SIZE + (CHAMPION_ICON_SIZE / 4)) #Space between teams (Blue and Red)
     SECTION_SPACING = int((CHAMPION_ICON_SIZE / 2))  # Space between sections (e.g., Placement Matches, Week 1, etc.)
@@ -256,7 +267,7 @@ def right_layout(team, output_file="simplify.jpg"):
         for i in section["matches"]:
             if i['team'] == "Coe":
                 games += 1
-    img = Image.new("RGB", (16 * CHAMPION_ICON_SIZE, int( CHAMPION_ICON_SIZE * matches + 1.15 * games * CHAMPION_ICON_SIZE)), (207, 191, 163))
+    img = Image.new("RGBA", (16 * CHAMPION_ICON_SIZE, int( CHAMPION_ICON_SIZE * matches + 1.15 * games * CHAMPION_ICON_SIZE)), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     
     x_margin, y_margin = int(CHAMPION_ICON_SIZE * 0.5), int(CHAMPION_ICON_SIZE * 0.5)  # Starting positions
@@ -272,11 +283,11 @@ def right_layout(team, output_file="simplify.jpg"):
         else:
             draw.text((x_offset / 6, pos), (section["section"][0]).upper(), fill="black", font=font)
         for match in section["matches"]: 
-            if match['W/L'] == 'W' and match['team'] == College:
+            if match['W/L'] == 'W' and match['team'] == college:
                 draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="green")
-            if match['W/L'] == 'L' and match['team'] == College:
+            if match['W/L'] == 'L' and match['team'] == college:
                 draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="red")
-            if match['side'] == 'Blue' and match['team'] == College: # BLUE
+            if match['side'] == 'Blue' and match['team'] == college: # BLUE
                 # Place champion icons
                 icon_y = x_offset # Indent icons to the right of text
                 count = 1
@@ -305,7 +316,7 @@ def right_layout(team, output_file="simplify.jpg"):
                         icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
                     count += 1
                 y_offset += GAME_SPACING  # Move to the next row
-            if match['side'] == 'Red' and match['team'] == College: # RED
+            if match['side'] == 'Red' and match['team'] == college: # RED
                 # Place champion icons
                 icon_y = x_offset  # Indent icons to the right of text
                 count = 1
@@ -348,20 +359,34 @@ def right_layout(team, output_file="simplify.jpg"):
 # Use old code to get past 10 matches in ranked OR top 5 mastery
 # Remove any static numbers
 
-def bottom_layout(team, output_file="scout.jpg"):
-    #Complex
-    return 0
 
 def master_image(college):
-    return 0
+    top = Image.open("top.png")
+    mid = Image.open("mid.png")
+    right = Image.open("right.png")
+    
+    total_width = ((mid.width * 2) + right.width)
+    total_height = (mid.height + top.height)
+
+    # # Define the dimensions for the final image
+    super_image = Image.new("RGB", (total_width, total_height), "beige")
+
+    # # Paste the images into the final layout
+    # # super_image.paste(college_logo, (0, 0))
+    super_image.paste(top, (0, 0), mask= top)
+    super_image.paste(right, (mid.width*2, 0), mask = right)
+    super_image.paste(mid, (0, top.height), mask= mid)
+
+
+    # Save the final image
+    super_image.save("super.png")
 
 # Work on combining all these images together w/ team name as outputfile
 def main():
-    top_layout(team, output_file = "top.jpg")
-    # middle_layout(team, output_file="mid.jpg")
-    # right_layout(team, output_file="right.jpg")
-    # bottom_layout(team, output_file="mid.jpg")
-    # master_image(team name)
+    # top_layout(team, output_file = "top.png")
+    # middle_layout(team, output_file="mid.png")
+    # right_layout(team, output_file="right.png")
+    master_image("was")
 
 
 main()
