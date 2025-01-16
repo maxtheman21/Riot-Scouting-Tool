@@ -129,8 +129,9 @@ def top_layout(team, output_file="positions.png"):
     print(f"Layout saved as {output_file}")
 
 # TODO
-# KDAs
+# Add borders
 # Lines
+# Make it so it doubles the width and uses full space
 
 def middle_layout(team, output_file="games.png"):
     ROW_SPACING = CHAMPION_ICON_SIZE  # Space between rows within a section
@@ -180,7 +181,7 @@ def middle_layout(team, output_file="games.png"):
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
-                            new_alpha = int(item[3] * 0.25)  
+                            new_alpha = int(item[3] * 0.75)  
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     elif count == 9 or count == 10: # Ban 4 & 5
@@ -188,7 +189,7 @@ def middle_layout(team, output_file="games.png"):
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
-                            new_alpha = int(item[3] * 0.25)  
+                            new_alpha = int(item[3] * 0.75)  
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     else: # Pick 1 & 2 & 3
@@ -202,7 +203,7 @@ def middle_layout(team, output_file="games.png"):
                 y_offset += GAME_SPACING  # Move to the next row
             if match['side'] == 'Red':
                 # Draw team names and scores
-                text = f"{match['W/L']} ({match['team']})"
+                text = f"{match['W/L']} {match['team']}"
                 draw.text((x_offset, y_offset), text, fill="black", font=small_font)
                 
                 # Place champion icons
@@ -223,7 +224,7 @@ def middle_layout(team, output_file="games.png"):
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
-                            new_alpha = int(item[3] * 0.25)  
+                            new_alpha = int(item[3] * 0.75)  
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     elif count == 9 or count == 10: # Ban 4 & 5
@@ -231,7 +232,7 @@ def middle_layout(team, output_file="games.png"):
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
-                            new_alpha = int(item[3] * 0.25)  
+                            new_alpha = int(item[3] * 0.75)  
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     else: # Pick 1 & 2 & 3
@@ -302,7 +303,7 @@ def right_layout(team, output_file="simplify.png"):
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
-                            new_alpha = int(item[3] * 0.25)  
+                            new_alpha = int(item[3] * 0.75)  
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     img.paste(champ_img, (icon_y, y_offset), champ_img)
@@ -331,7 +332,7 @@ def right_layout(team, output_file="simplify.png"):
                         data = champ_img.getdata()
                         new_data = []
                         for item in data:
-                            new_alpha = int(item[3] * 0.25)  
+                            new_alpha = int(item[3] * 0.75)  
                             new_data.append((item[0], item[1], item[2], new_alpha)) 
                         champ_img.putdata(new_data)
                     img.paste(champ_img, (icon_y, y_offset), champ_img)
@@ -364,19 +365,18 @@ def master_image(college):
     top = Image.open("top.png")
     mid = Image.open("mid.png")
     right = Image.open("right.png")
+    # logo = Image.open("college.png")
     
+    # Define height and width and make canvas
     total_width = ((mid.width * 2) + right.width)
     total_height = (mid.height + top.height)
-
-    # # Define the dimensions for the final image
     super_image = Image.new("RGB", (total_width, total_height), "beige")
 
-    # # Paste the images into the final layout
-    # # super_image.paste(college_logo, (0, 0))
-    super_image.paste(top, (0, 0), mask= top)
-    super_image.paste(right, (mid.width*2, 0), mask = right)
+    # Paste the images into the final layout
+    # super_image.paste(logo, (0, 0), mask= logo)
+    super_image.paste(top, (int(mid.width/2), 0), mask= top)
+    super_image.paste(right, (mid.width*2, 0), mask= right)
     super_image.paste(mid, (0, top.height), mask= mid)
-
 
     # Save the final image
     super_image.save("super.png")
