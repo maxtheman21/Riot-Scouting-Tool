@@ -134,9 +134,8 @@ def top_layout(team, output_file="positions.png"):
     print(f"Layout saved as {output_file}")
 
 # TODO
-# Add borders
 # Lines
-# Make it so it doubles the width and uses full space
+# Change W/L Font
 
 def middle_layout(team, output_file="games.png"):
     ROW_SPACING = CHAMPION_ICON_SIZE  # Space between rows within a section
@@ -149,17 +148,23 @@ def middle_layout(team, output_file="games.png"):
     
     # Create a blank canvas
     count = 0
+    sec = 0
     for section in team["Coe"]:
+        sec += 1
         for i in section["matches"]:
             count += 1
-    img = Image.new("RGBA", (int(21.5*CHAMPION_ICON_SIZE), int(count*2*CHAMPION_ICON_SIZE + y_offset)), (0, 0, 0 ,0))
+    sec = round(sec/2)
+    img = Image.new("RGBA", (int(21.5*CHAMPION_ICON_SIZE*2), int((count+sec)*CHAMPION_ICON_SIZE + y_offset)), (0, 0, 0 ,0)) #1st error will appear here, count+sec isn't correct
     draw = ImageDraw.Draw(img)
 
     # Load a font for text
     font = ImageFont.truetype(FONT_PATH, int(CHAMPION_ICON_SIZE * 0.5))
     small_font = ImageFont.truetype(FONT_PATH, int(CHAMPION_ICON_SIZE * 0.35))
-    
+    draw.line(((21.25*CHAMPION_ICON_SIZE + CHAMPION_ICON_SIZE / 3, y_offset), (21.25*CHAMPION_ICON_SIZE + CHAMPION_ICON_SIZE / 3, (count+sec)*CHAMPION_ICON_SIZE)), fill = "gray", width = int(CHAMPION_ICON_SIZE/50))
     for section in team["Coe"]:
+        if sec == 0:
+            x_offset = 21.5*CHAMPION_ICON_SIZE + CHAMPION_ICON_SIZE / 2
+            y_offset = y_margin
         # Draw section title
         draw.text((x_offset, y_offset), section["section"], fill="black", font=font)
         y_offset += ROW_SPACING  # Move down for the rows
@@ -248,11 +253,9 @@ def middle_layout(team, output_file="games.png"):
                     else:
                         icon_x += CHAMPION_ICON_SIZE + ICON_SPACING
                     count += 1
-                y_offset += GAME_SPACING  # Move to the next row
-            
-                # Add spacing between sections
-                y_offset += SECTION_SPACING - ROW_SPACING
-        y_offset += SECTION_SPACING
+                y_offset += GAME_SPACING + SECTION_SPACING - ROW_SPACING # Move to the next row
+        sec -= 1
+        draw.line(((x_offset + CHAMPION_ICON_SIZE, y_offset - GAME_SPACING), (x_offset + 15 * (ICON_SPACING + CHAMPION_ICON_SIZE), y_offset - GAME_SPACING)), fill = "gray", width = int(CHAMPION_ICON_SIZE / 50))
 
 
     # Save the result
@@ -263,7 +266,7 @@ def right_layout(team, output_file="simplify.png"):
     ICON_SPACING = int(CHAMPION_ICON_SIZE * 0.15)  # Space between icons within a row
     GAME_SPACING = int(CHAMPION_ICON_SIZE + (CHAMPION_ICON_SIZE / 4)) #Space between teams (Blue and Red)
     SECTION_SPACING = int((CHAMPION_ICON_SIZE / 2))  # Space between sections (e.g., Placement Matches, Week 1, etc.)
-    font = ImageFont.truetype(FONT_PATH, CHAMPION_ICON_SIZE * 0.5)
+    font = ImageFont.truetype(FONT_PATH, CHAMPION_ICON_SIZE * 0.75)
     games = 0
     matches = 0
 
@@ -377,14 +380,14 @@ def master_image(college, output_file = "combined.png"):
     logo = Image.open(f"{college}.png").resize((top.height,top.height))
     
     # Define height and width and make canvas
-    total_width = ((mid.width * 2) + right.width)
+    total_width = (mid.width + right.width)
     total_height = (mid.height + top.height)
     super_image = Image.new("RGB", (total_width, total_height), "beige")
 
     # Paste the images into the final layout
     super_image.paste(logo, (0, 0), mask= logo)
-    super_image.paste(top, (logo.width + int(mid.width/2), 0), mask= top)
-    super_image.paste(right, (mid.width*2, 0), mask= right)
+    super_image.paste(top, (logo.width + int(mid.width/4), 0), mask= top)
+    super_image.paste(right, (mid.width, 0), mask= right)
     super_image.paste(mid, (0, top.height), mask= mid)
 
     # Save the final image
@@ -394,8 +397,8 @@ def master_image(college, output_file = "combined.png"):
 def main():
     # top_layout(team, output_file = "top.png")
     # middle_layout(team, output_file="mid.png")
-    right_layout(team, output_file="right.png")
-    # master_image("college", output_file = "main.png")
+    # right_layout(team, output_file="right.png")
+    master_image("college", output_file = "main.png")
 
 
 main()
