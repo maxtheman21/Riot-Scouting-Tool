@@ -376,6 +376,43 @@ def right_layout(team, output_file="simplify.png"):
 # Use old code to get past 10 matches in ranked OR top 5 mastery
 # Remove any static numbers
 
+def bottom_layout(team, output_file="topchamps.png"):
+    longest = 0
+    x_margin, y_margin = CHAMPION_ICON_SIZE * 0.25, CHAMPION_ICON_SIZE * 1.25  # Starting positions
+    x_offset, y_offset = x_margin, y_margin
+    font = ImageFont.truetype(FONT_PATH, int(CHAMPION_ICON_SIZE * 0.5))
+    
+    for player in players:
+        length = 0
+        player = player.upper()
+        for char in player:
+            length += font.getbbox(char)[2]
+        if length > longest:
+            longest = length
+    x_offset += longest + CHAMPION_ICON_SIZE * 0.1 # Offsets everything by that username
+
+    icon_x = int(x_offset + CHAMPION_ICON_SIZE * 1.01)  # Indent icons to the right of text
+    
+    img = Image.new("RGBA", (int(CHAMPION_ICON_SIZE + x_offset * 10), CHAMPION_ICON_SIZE * 10), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    
+    # account_info = requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{temp[0]}/{temp[1]}?api_key={cred}")
+    account_info = requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/maxtheman21/coe?api_key={cred}")
+    puuid = account_info.json()['puuid']
+    mastery = requests.get(f"https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count=5&api_key={cred}")
+    champ = []
+    for i in mastery.json():
+        for j in key:
+            if key[j] == str(i["championId"]):
+                url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{i["championId"]}.png"
+                champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))            
+                img.paste(champ_img, (icon_x, int(y_offset + 50)))
+                icon_x += CHAMPION_ICON_SIZE
+                break
+    print(champ)
+    
+    img.save(output_file)
+    print(f"Layout saved as {output_file}")
 
 def master_image(college, output_file = "combined.png"):
     top = Image.open("top.png")
@@ -399,8 +436,9 @@ def master_image(college, output_file = "combined.png"):
 
 # Work on combining all these images together w/ team name as outputfile
 # top_layout(team, output_file = "top.png")
-middle_layout(team, output_file="mid.png")
+# middle_layout(team, output_file="mid.png")
 # right_layout(team, output_file="right.png")
+bottom_layout(team, output_file="bot.png")
 # master_image("college", output_file = "main.png")
 
 
