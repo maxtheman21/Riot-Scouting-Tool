@@ -1,3 +1,2 @@
-PIL
+pillow
 requests
-json

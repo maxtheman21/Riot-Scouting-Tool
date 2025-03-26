@@ -57,7 +57,6 @@ def top_layout(team, output_file="positions.png"):
     
     for player in players:
         temp = player.split("#")
-        import requests
         account_info = requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{temp[0]}/{temp[1]}?api_key={cred}")
         puuid = account_info.json()['puuid']
         summoner_info = requests.get(f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}?api_key={cred}")
@@ -377,8 +376,10 @@ def right_layout(team, output_file="simplify.png"):
 # Remove any static numbers
 
 def bottom_layout(team, output_file="topchamps.png"):
+    ICON_SPACING = int(CHAMPION_ICON_SIZE * 0.15)  # Space between icons within a row
+    PLAYER_SPACING = int(CHAMPION_ICON_SIZE / 2) #Space between teams (Blue and Red)
     longest = 0
-    x_margin, y_margin = CHAMPION_ICON_SIZE * 0.25, CHAMPION_ICON_SIZE * 1.25  # Starting positions
+    x_margin, y_margin = CHAMPION_ICON_SIZE * 0.25, CHAMPION_ICON_SIZE * 0.5  # Starting positions
     x_offset, y_offset = x_margin, y_margin
     font = ImageFont.truetype(FONT_PATH, int(CHAMPION_ICON_SIZE * 0.5))
     
@@ -391,25 +392,34 @@ def bottom_layout(team, output_file="topchamps.png"):
             longest = length
     x_offset += longest + CHAMPION_ICON_SIZE * 0.1 # Offsets everything by that username
 
-    icon_x = int(x_offset + CHAMPION_ICON_SIZE * 1.01)  # Indent icons to the right of text
+    icon_x = int(x_offset + CHAMPION_ICON_SIZE / 4)  # Indent icons to the right of text
     
-    img = Image.new("RGBA", (int(CHAMPION_ICON_SIZE + x_offset * 10), CHAMPION_ICON_SIZE * 10), (0, 0, 0, 0))
+    img = Image.new("RGBA", (int(CHAMPION_ICON_SIZE + x_offset + 5 * CHAMPION_ICON_SIZE + ICON_SPACING), CHAMPION_ICON_SIZE * 8), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    
-    # account_info = requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{temp[0]}/{temp[1]}?api_key={cred}")
-    account_info = requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/maxtheman21/coe?api_key={cred}")
-    puuid = account_info.json()['puuid']
-    mastery = requests.get(f"https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count=5&api_key={cred}")
-    champ = []
-    for i in mastery.json():
-        for j in key:
-            if key[j] == str(i["championId"]):
-                url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{i["championId"]}.png"
-                champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))            
-                img.paste(champ_img, (icon_x, int(y_offset + 50)))
-                icon_x += CHAMPION_ICON_SIZE
-                break
-    print(champ)
+    count = 0
+    for player in players:
+        pos = y_offset + (count * CHAMPION_ICON_SIZE * 1.5) + CHAMPION_ICON_SIZE / 4 # Offsets for positions
+        player = player.upper() # Upper
+        x = x_offset
+        for char in player[::-1]:
+            char_width = font.getbbox(char)[2]  # Get the width of the character
+            x -= char_width  # Move left for the next character
+            draw.text((x, pos), char, font=font, fill="black")
+        count += 1
+
+    for player in players:
+        temp = player.split("#")
+        account_info = requests.get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{temp[0]}/{temp[1]}?api_key={cred}")
+        puuid = account_info.json()['puuid']
+        temp = icon_x
+        mastery = requests.get(f"https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top?count=5&api_key={cred}")
+        for i in mastery.json():
+            ID = i["championId"]
+            url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
+            champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))            
+            img.paste(champ_img, (temp, int(y_offset)))
+            temp += CHAMPION_ICON_SIZE + ICON_SPACING
+        y_offset += CHAMPION_ICON_SIZE + PLAYER_SPACING
     
     img.save(output_file)
     print(f"Layout saved as {output_file}")
@@ -418,6 +428,7 @@ def master_image(college, output_file = "combined.png"):
     top = Image.open("top.png")
     mid = Image.open("mid.png")
     right = Image.open("right.png")
+    bot = Image.open("bot.png")
     logo = Image.open(f"{college}.png").resize((top.height,top.height))
     
     # Define height and width and make canvas
@@ -430,15 +441,17 @@ def master_image(college, output_file = "combined.png"):
     super_image.paste(top, (logo.width + int(mid.width/4), 0), mask= top)
     super_image.paste(right, (mid.width, 0), mask= right)
     super_image.paste(mid, (0, top.height), mask= mid)
+    super_image.paste(bot, (total_width - bot.width, total_height - bot.height), mask= bot)
 
     # Save the final image
     super_image.save(output_file)
+    print(f"Layout saved as {output_file}")
 
 # Work on combining all these images together w/ team name as outputfile
 # top_layout(team, output_file = "top.png")
 # middle_layout(team, output_file="mid.png")
 # right_layout(team, output_file="right.png")
-bottom_layout(team, output_file="bot.png")
-# master_image("college", output_file = "main.png")
+# bottom_layout(team, output_file = "bot.png")
+master_image("college", output_file = "main.png")
 
 
