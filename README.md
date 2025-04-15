@@ -42,10 +42,7 @@ This is a Python-based scouting tool for **League of Legends** designed to analy
 
 ## Usage
 
-1. Run the tool:
-   ```bash
-   python main.py
-   ```
+1. Ensure all example files are updated to your specifications.
 
 2. Change the JSON for previous games and update the list of players.
 

@@ -2,6 +2,8 @@ creds.py
 credentials.json
 was.py
 __pycache__/
+Data/
+data.py
 mid.png
 right.png
 top.png

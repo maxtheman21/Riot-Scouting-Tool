@@ -2,23 +2,24 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 import json
 from creds import *
+from data import *
 
 
 
 # Configuration for layout
+image_path = "Image/"
+team = teams()
 cred = cred()
+
 with open('championKey/champion_name_key_map.json', 'r') as file: #JSON to convert name to ID for URL lookup
     key = json.load(file)
-with open(r'Image\data.json', 'r') as file:
-    team = json.load(file)
+
 
 roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
-players = ["dawnbreak#free", "greattohave#NA1", "eletro#6841", "maxtheman21#coe", "armedchief#2001"] # Starting roster we are analyzing (Sample)
-FONT_PATH = "Image/Roboto-Black.ttf"  # Path to a TTF font file 
-college = "Coe"
-CHAMPION_ICON_SIZE = 200 # Width, Height of champion icons
-blue = []
-red = []
+players = players()
+FONT_PATH = "Roboto-Black.ttf"  # Path to a TTF font file 
+college = college()
+CHAMPION_ICON_SIZE = 100 # Width, Height of champion icons
 
 # GLOBAL TODO
 # Font Color, Then Ready
@@ -45,7 +46,6 @@ def top_layout(team, output_file="positions.png"):
     x_offset += longest + CHAMPION_ICON_SIZE * 0.1 # Offsets everything by that username
 
     icon_x = int(x_offset + CHAMPION_ICON_SIZE * 1.01)  # Indent icons to the right of text
-
     for section in team[college]:
         scount += 1
         for i in section["matches"]:
@@ -185,8 +185,11 @@ def middle_layout(team, output_file="games.png"):
                 # Place champion icons
                 for champ in match["picks"]:
                     ID = champ.split(" ")
-                    ID = ID[0]        
-                    ID = key[ID]           
+                    ID = ID[0]
+                    if ID == "":
+                        ID = -1
+                    else:        
+                        ID = key[ID]           
                     if ID in previous and match["team"] == college:
                         print(champ)
                     if match["team"] == college:
@@ -276,11 +279,11 @@ def right_layout(team, output_file="simplify.png"):
                 if section["matches"][i][j]["team"] == college:
                     games += 1
                     
-    img = Image.new("RGBA", (16 * CHAMPION_ICON_SIZE, int( CHAMPION_ICON_SIZE * matches + 1.15 * games * CHAMPION_ICON_SIZE)), (0, 0, 0, 0))
+    img = Image.new("RGBA", (16 * CHAMPION_ICON_SIZE + int(CHAMPION_ICON_SIZE * 0.5), int(matches * games * CHAMPION_ICON_SIZE)), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     
     x_margin, y_margin = int(CHAMPION_ICON_SIZE * 0.5), int(CHAMPION_ICON_SIZE * 0.5)  # Starting positions
-    x_offset = x_margin
+    x_offset = int(x_margin + CHAMPION_ICON_SIZE * 0.25)
     y_offset = y_margin
     
     for section in team[college]:
@@ -293,9 +296,9 @@ def right_layout(team, output_file="simplify.png"):
         pos = y_offset + int(((scout * GAME_SPACING) / 2) - CHAMPION_ICON_SIZE * 0.35)
         if "Week" in section["section"]:
             temp = section["section"].split(" ")
-            draw.text((x_offset / 6, pos), (temp[1]).upper(), fill="black", font=font)
+            draw.text((x_offset / 2 - CHAMPION_ICON_SIZE * 0.25, pos - CHAMPION_ICON_SIZE * 0.25), (temp[1]).upper(), fill="black", font=font)
         else:
-            draw.text((x_offset / 6, pos), (section["section"][0]).upper(), fill="black", font=font)
+            draw.text((x_offset / 2 - CHAMPION_ICON_SIZE * 0.25, pos - CHAMPION_ICON_SIZE * 0.25), (section["section"][0]).upper(), fill="black", font=font)
         for i in section["matches"]:
             for j in section["matches"][i]: 
                 match = section["matches"][i][j]
@@ -303,66 +306,109 @@ def right_layout(team, output_file="simplify.png"):
                     draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="green")
                 if match['W/L'] == 'L' and match['team'] == college:
                     draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="red")
-                if j == 'Blue' and match['team'] == college: # BLUE
-                    # Place champion icons
-                    icon_y = x_offset # Indent icons to the right of text
-                    count = 1
-                    for champ in match["picks"]:
-                        ID = champ.split(" ")
-                        ID = ID[0]
-                        ID = key[ID]
-                        url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
-                        champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
-                        champ_img = champ_img.convert("RGBA")
-                        if count > 5:
-                            data = champ_img.getdata()
-                            new_data = []
-                            for item in data:
-                                new_alpha = int(item[3] * 0.75)  
-                                new_data.append((item[0], item[1], item[2], new_alpha)) 
-                            champ_img.putdata(new_data)
-                        img.paste(champ_img, (icon_y, y_offset), champ_img)
-                        if count == 5:
-                            icon_y += int(CHAMPION_ICON_SIZE / 1.5)
-                        if count == 3 or count == 8:
-                            icon_y += int(CHAMPION_ICON_SIZE / 2)
-                        if count == 1 or count == 3: # first pick, 2 picks, then 2 picks. 3 bans, then 2 bans 
-                            icon_y += (CHAMPION_ICON_SIZE + ICON_SPACING) * 2  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick 
-                        else:
-                            icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
-                        count += 1
+                if j == 'Blue':
+                    if match['team'] == college: # BLUE
+                        # Place champion icons
+                        icon_y = x_offset # Indent icons to the right of text
+                        count = 1
+                        for champ in match["picks"]:
+                            if count < 6:
+                                ID = champ.split(" ")
+                                ID = ID[0]
+                                if ID == '':
+                                    ID = -1
+                                else:
+                                    ID = key[ID] 
+                                url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
+                                champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
+                                champ_img = champ_img.convert("RGBA")
+                                img.paste(champ_img, (icon_y, y_offset), champ_img)
+                                if count == 5:
+                                    icon_y += int(CHAMPION_ICON_SIZE / 1.5)
+                                if count == 3 or count == 8:
+                                    icon_y += int(CHAMPION_ICON_SIZE / 2)
+                                if count == 1 or count == 3: # first pick, 2 picks, then 2 picks. 3 bans, then 2 bans 
+                                    icon_y += (CHAMPION_ICON_SIZE + ICON_SPACING) * 2  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick 
+                                else:
+                                    icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
+                                count += 1
+                    else:
+                        count = 1
+                        icon_y = int(CHAMPION_ICON_SIZE * 8.9) + x_offset
+                        for champ in match["picks"]:
+                            if count > 5:
+                                ID = champ.split(" ")
+                                ID = ID[0]
+                                if ID == '':
+                                    ID = -1
+                                else:
+                                    ID = key[ID] 
+                                url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
+                                champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
+                                champ_img = champ_img.convert("RGBA")
+                                data = champ_img.getdata()
+                                new_data = []
+                                for item in data:
+                                    new_alpha = int(item[3] * 0.75)  
+                                    new_data.append((item[0], item[1], item[2], new_alpha)) 
+                                champ_img.putdata(new_data)
+                                img.paste(champ_img, (icon_y, y_offset), champ_img)
+                                if count == 8:
+                                    icon_y += int(CHAMPION_ICON_SIZE / 2)
+                                icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
+                            count += 1
+                if j == 'Red':
+                    if match['team'] == college: # RED
+                        # Place champion icons
+                        icon_y = x_offset  # Indent icons to the right of text
+                        count = 1
+                        for champ in match["picks"]:
+                            if count < 6:
+                                ID = champ.split(" ")
+                                ID = ID[0]       
+                                if ID == '':
+                                    ID = -1
+                                else:
+                                    ID = key[ID]             
+                                url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
+                                champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
+                                champ_img = champ_img.convert("RGBA")
+                                img.paste(champ_img, (icon_y, y_offset), champ_img)
+                                if count == 5:
+                                    icon_y += int(CHAMPION_ICON_SIZE / 1.5)
+                                if count == 3 or count == 8:
+                                    icon_y += int(CHAMPION_ICON_SIZE / 2)
+                                if count == 2 or count == 4: # 2 picks, 2 picks, then last pick. 3 bans, then 2 bans
+                                    icon_y += (CHAMPION_ICON_SIZE + ICON_SPACING) * 2  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick
+                                else:
+                                    icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
+                                count += 1
+                    else:
+                        count = 1
+                        icon_y = int(CHAMPION_ICON_SIZE * 8.9) + x_offset
+                        for champ in match["picks"]:
+                            if count > 5:
+                                ID = champ.split(" ")
+                                ID = ID[0]
+                                if ID == '':
+                                    ID = -1
+                                else:
+                                    ID = key[ID] 
+                                url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
+                                champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
+                                champ_img = champ_img.convert("RGBA")
+                                data = champ_img.getdata()
+                                new_data = []
+                                for item in data:
+                                    new_alpha = int(item[3] * 0.75)  
+                                    new_data.append((item[0], item[1], item[2], new_alpha)) 
+                                champ_img.putdata(new_data)
+                                img.paste(champ_img, (icon_y, y_offset), champ_img)
+                                if count == 8:
+                                    icon_y += int(CHAMPION_ICON_SIZE / 2)
+                                icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
+                            count += 1
                     y_offset += GAME_SPACING  # Move to the next row
-                if j == 'Red' and match['team'] == college: # RED
-                    # Place champion icons
-                    icon_y = x_offset  # Indent icons to the right of text
-                    count = 1
-                    for champ in match["picks"]:
-                        ID = champ.split(" ")
-                        ID = ID[0]       
-                        ID = key[ID]             
-                        url = f"https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/{ID}.png"
-                        champ_img = Image.open(requests.get(url, stream=True).raw).resize((CHAMPION_ICON_SIZE, CHAMPION_ICON_SIZE))
-                        champ_img = champ_img.convert("RGBA")
-                        if count > 5:
-                            data = champ_img.getdata()
-                            new_data = []
-                            for item in data:
-                                new_alpha = int(item[3] * 0.75)  
-                                new_data.append((item[0], item[1], item[2], new_alpha)) 
-                            champ_img.putdata(new_data)
-                        img.paste(champ_img, (icon_y, y_offset), champ_img)
-                        if count == 5:
-                            icon_y += int(CHAMPION_ICON_SIZE / 1.5)
-                        if count == 3 or count == 8:
-                            icon_y += int(CHAMPION_ICON_SIZE / 2)
-                        if count == 2 or count == 4: # 2 picks, 2 picks, then last pick. 3 bans, then 2 bans
-                            icon_y += (CHAMPION_ICON_SIZE + ICON_SPACING) * 2  # Empty Portrait Space to Indicate a stop in picking (i.e) BLUE SIDE: 1st pick SPACE 2nd pick
-                        else:
-                            icon_y += CHAMPION_ICON_SIZE + ICON_SPACING
-                        count += 1
-                    
-                    y_offset += GAME_SPACING  # Move to the next row
-        
             # Add spacing between sections
         y_offset += SECTION_SPACING
 
@@ -424,34 +470,34 @@ def bottom_layout(team, output_file="topchamps.png"):
     img.save(output_file)
     print(f"Layout saved as {output_file}")
 
-def master_image(college, output_file = "combined.png"):
-    top = Image.open("top.png")
-    mid = Image.open("mid.png")
-    right = Image.open("right.png")
-    bot = Image.open("bot.png")
-    logo = Image.open(f"{college}.png").resize((top.height,top.height))
+def master_image(output_file = "combined.png"):
+    top = Image.open(f"{image_path}top.png")
+    mid = Image.open(f"{image_path}mid.png")
+    right = Image.open(f"{image_path}right.png")
+    bot = Image.open(f"{image_path}bot.png")
+    logo = Image.open(f"{image_path}college.png").resize((top.height,top.height))
     
     # Define height and width and make canvas
-    total_width = (mid.width + right.width)
+    total_width = max((mid.width + right.width), (logo.width + top.width + right.width))
     total_height = (mid.height + top.height)
     super_image = Image.new("RGB", (total_width, total_height), "beige")
 
     # Paste the images into the final layout
     super_image.paste(logo, (0, 0), mask= logo)
-    super_image.paste(top, (logo.width + int(mid.width/4), 0), mask= top)
-    super_image.paste(right, (mid.width, 0), mask= right)
-    super_image.paste(mid, (0, top.height), mask= mid)
+    super_image.paste(top, (logo.width, 0), mask= top)
+    super_image.paste(mid, (int((total_width - mid.width - right.width)/2), top.height), mask= mid)
     super_image.paste(bot, (total_width - bot.width, total_height - bot.height), mask= bot)
+    super_image.paste(right, (max(mid.width, (logo.width + top.width)), 0), mask= right) 
 
     # Save the final image
     super_image.save(output_file)
     print(f"Layout saved as {output_file}")
 
 # Work on combining all these images together w/ team name as outputfile
-# top_layout(team, output_file = "top.png")
-# middle_layout(team, output_file="mid.png")
-# right_layout(team, output_file="right.png")
-# bottom_layout(team, output_file = "bot.png")
-master_image("college", output_file = "main.png")
+top_layout(team, output_file = f"{image_path}top.png")
+middle_layout(team, output_file=f"{image_path}mid.png")
+right_layout(team, output_file=f"{image_path}right.png")
+bottom_layout(team, output_file = f"{image_path}bot.png")
+master_image(output_file = f"{image_path}main.png")
 
 
