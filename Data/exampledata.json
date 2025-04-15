@@ -1,0 +1,76 @@
+{
+  "College": [
+      {
+          "section": "Week 1",
+          "matches": {
+              "Game 1": {
+                  "Blue":{
+                      "team": "Name1",
+                      "W/L": "W",
+                      "picks": ["monkeyking T", "leesin J", "zed M", "xayah A", "leona S", "shen", "vayne", "jhin", "heimerdinger", "yasuo"]
+                      
+                  },
+                  "Red":{
+                      "team": "Name2",
+                      "W/L": "L",
+                      "picks": ["aatrox T", "sejuani J", "ahri M", "tristana A", "nami S", "gragas", "kassadin", "lucian", "darius", "veigar"]
+                  }   
+              },
+              "Game 2":{
+                  "Blue":{
+                      "team": "Name1",
+                      "W/L": "W",
+                      "picks": ["monkeyking T", "leesin J", "zed M", "xayah A", "leona S", "shen", "vayne", "jhin", "heimerdinger", "yasuo"]
+                      
+                  },
+                  "Red":{
+                      "team": "Name2",
+                      "W/L": "L",
+                      "picks": ["aatrox T", "sejuani J", "ahri M", "tristana A", "nami S", "gragas", "kassadin", "lucian", "darius", "veigar"]
+                  }   
+              },
+              "Game 3": {
+                  "Blue":{
+                          "team": "Name1",
+                          "W/L": "W",
+                          "picks": ["camille T", "xinzhao J", "syndra M", "kaisa A", "karma S", "pantheon", "twitch", "yasuo", "vladimir", "ezreal"]
+                  },
+                  "Red":{
+                      "team": "Name2",
+                      "W/L": "L",
+                      "picks": ["aatrox T", "sejuani J", "ahri M", "tristana A", "nami S", "gragas", "kassadin", "lucian", "darius", "veigar"]
+                  }
+              }
+          }
+      },
+      {
+          "section": "Week 2",
+          "matches": {
+              "Game 1": {
+                  "Blue":{
+                          "team": "Name1",
+                          "W/L": "W",
+                          "picks": ["camille T", "xinzhao J", "syndra M", "kaisa A", "karma S", "pantheon", "twitch", "yasuo", "vladimir", "ezreal"]
+                  },
+                  "Red":{
+                      "team": "Name2",
+                      "W/L": "L",
+                      "picks": ["aatrox T", "sejuani J", "ahri M", "tristana A", "nami S", "gragas", "kassadin", "lucian", "darius", "veigar"]
+                      }
+                  },
+              "Game 2": {
+                  "Blue": {
+                      "team": "Name1",
+                      "W/L": "W",
+                      "picks": ["malphite T", "graves J", "cassiopeia M", "twitch A", "nautilus S", "camille", "jayce", "ornn", "lulu", "kennen"]
+                  },
+                  "Red": {
+                  "team": "Name2",
+                  "W/L": "L",
+                  "picks": ["garen T", "shaco J", "anivia M", "missfortune A", "morgana S", "ryze", "kalista", "elise", "janna", "renekton"]
+                  }
+              }
+          }
+      }
+  ]
+}
