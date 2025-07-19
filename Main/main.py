@@ -7,19 +7,17 @@ from data import *
 
 
 # Configuration for layout
+roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
+FONT_PATH = "Roboto-Black.ttf"  # Path to a TTF font file 
 image_path = "Image/"
-team = teams()
+CHAMPION_ICON_SIZE = 100 # Width, Height of champion icons
+team = team()
 cred = cred()
+college = college()
+players = players()
 
 with open('championKey/champion_name_key_map.json', 'r') as file: #JSON to convert name to ID for URL lookup
     key = json.load(file)
-
-
-roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
-players = players()
-FONT_PATH = "Roboto-Black.ttf"  # Path to a TTF font file 
-college = college()
-CHAMPION_ICON_SIZE = 100 # Width, Height of champion icons
 
 # GLOBAL TODO
 # Font Color, Then Ready
@@ -90,7 +88,7 @@ def top_layout(team, output_file="positions.png"):
                         WL = "green"
                     elif match['W/L'] == 'L':
                         WL = "red"
-                    draw.rectangle([(icon_x - CHAMPION_ICON_SIZE * 0.03, y_offset + int(CHAMPION_ICON_SIZE * 6)), icon_x + CHAMPION_ICON_SIZE * 1.03, y_offset + int(CHAMPION_ICON_SIZE * 6) + CHAMPION_ICON_SIZE * 0.1], fill= WL)
+                    draw.rectangle([(icon_x - CHAMPION_ICON_SIZE * 0.03, y_offset + int(CHAMPION_ICON_SIZE * 6)), icon_x + CHAMPION_ICON_SIZE * 1.04, y_offset + int(CHAMPION_ICON_SIZE * 6) + CHAMPION_ICON_SIZE * 0.25], fill= WL)
                     count = 1
                         # Place champion icons
                     for champ in match["picks"]:
@@ -109,7 +107,7 @@ def top_layout(team, output_file="positions.png"):
                                 pos = y_offset + 3 * (CHAMPION_ICON_SIZE * 1.25)
                             elif champion[1] == "S":
                                 pos = y_offset + 4 * (CHAMPION_ICON_SIZE * 1.25)
-                            draw.rectangle([(icon_x - CHAMPION_ICON_SIZE * 0.03, int(pos - CHAMPION_ICON_SIZE * 0.03)), (icon_x + CHAMPION_ICON_SIZE * 1.03, int(pos) + CHAMPION_ICON_SIZE* 1.03)], fill=WL)
+                            draw.rectangle([(icon_x - CHAMPION_ICON_SIZE * 0.03, int(pos - CHAMPION_ICON_SIZE * 0.03)), (icon_x + CHAMPION_ICON_SIZE * 1.04, int(pos) + CHAMPION_ICON_SIZE* 1.04)], fill=WL)
                             img.paste(champ_img, (icon_x, int(pos)))
                             count += 1
                         else:
@@ -117,9 +115,9 @@ def top_layout(team, output_file="positions.png"):
                     icon_x += CHAMPION_ICON_SIZE + GAME_SPACING        
         if "Week" in section["section"]:
             temp = section["section"].split(" ")
-            draw.text((icon_x - int(CHAMPION_ICON_SIZE * scout / 1.5),   CHAMPION_ICON_SIZE * 0.375 + ( 7 * CHAMPION_ICON_SIZE)), (temp[1]).upper(), fill="black", font=font)
+            draw.text((icon_x - int(CHAMPION_ICON_SIZE * scout / 1.5), CHAMPION_ICON_SIZE * 0.5 + ( 7 * CHAMPION_ICON_SIZE)), (temp[1]).upper(), fill="black", font=font)
         else:
-            draw.text((icon_x - int(CHAMPION_ICON_SIZE * scout / 1.5), CHAMPION_ICON_SIZE * 0.375 + (7 * CHAMPION_ICON_SIZE)), (section["section"][0]).upper(), fill="black", font=font)
+            draw.text((icon_x - int(CHAMPION_ICON_SIZE * scout / 1.5), CHAMPION_ICON_SIZE * 0.5 + (7 * CHAMPION_ICON_SIZE)), (section["section"][0]).upper(), fill="black", font=font)
         # Add spacing between sections
         icon_x += SECTION_SPACING
 
@@ -283,7 +281,7 @@ def right_layout(team, output_file="simplify.png"):
     draw = ImageDraw.Draw(img)
     
     x_margin, y_margin = int(CHAMPION_ICON_SIZE * 0.5), int(CHAMPION_ICON_SIZE * 0.5)  # Starting positions
-    x_offset = int(x_margin + CHAMPION_ICON_SIZE * 0.25)
+    x_offset = int(x_margin + CHAMPION_ICON_SIZE * 0.5)
     y_offset = y_margin
     
     for section in team[college]:
@@ -303,9 +301,9 @@ def right_layout(team, output_file="simplify.png"):
             for j in section["matches"][i]: 
                 match = section["matches"][i][j]
                 if match['W/L'] == 'W' and match['team'] == college:
-                    draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="green")
+                    draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.25, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="green")
                 if match['W/L'] == 'L' and match['team'] == college:
-                    draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.1, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="red")
+                    draw.rectangle([(x_offset - CHAMPION_ICON_SIZE * 0.25, y_offset), (x_offset, y_offset + CHAMPION_ICON_SIZE)], fill="red")
                 if j == 'Blue':
                     if match['team'] == college: # BLUE
                         # Place champion icons
@@ -417,10 +415,6 @@ def right_layout(team, output_file="simplify.png"):
     img.save(output_file)
     print(f"Layout saved as {output_file}")
 
-# TODO
-# Use old code to get past 10 matches in ranked OR top 5 mastery
-# Remove any static numbers
-
 def bottom_layout(team, output_file="topchamps.png"):
     ICON_SPACING = int(CHAMPION_ICON_SIZE * 0.15)  # Space between icons within a row
     PLAYER_SPACING = int(CHAMPION_ICON_SIZE / 2) #Space between teams (Blue and Red)
@@ -440,7 +434,7 @@ def bottom_layout(team, output_file="topchamps.png"):
 
     icon_x = int(x_offset + CHAMPION_ICON_SIZE / 4)  # Indent icons to the right of text
     
-    img = Image.new("RGBA", (int(CHAMPION_ICON_SIZE + x_offset + 5 * CHAMPION_ICON_SIZE + ICON_SPACING), CHAMPION_ICON_SIZE * 8), (0, 0, 0, 0))
+    img = Image.new("RGBA", (int(CHAMPION_ICON_SIZE + x_offset * CHAMPION_ICON_SIZE + ICON_SPACING), CHAMPION_ICON_SIZE * 8), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     count = 0
     for player in players:
@@ -494,10 +488,10 @@ def master_image(output_file = "combined.png"):
     print(f"Layout saved as {output_file}")
 
 # Work on combining all these images together w/ team name as outputfile
-top_layout(team, output_file = f"{image_path}top.png")
-middle_layout(team, output_file=f"{image_path}mid.png")
-right_layout(team, output_file=f"{image_path}right.png")
-bottom_layout(team, output_file = f"{image_path}bot.png")
+# top_layout(team, output_file = f"{image_path}top.png")
+# middle_layout(team, output_file=f"{image_path}mid.png")
+# right_layout(team, output_file=f"{image_path}right.png")
+# bottom_layout(team, output_file = f"{image_path}bot.png")
 master_image(output_file = f"{image_path}main.png")
 
 
