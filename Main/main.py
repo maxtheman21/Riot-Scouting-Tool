@@ -5,7 +5,6 @@ from creds import *
 from data import *
 
 
-
 # Configuration for layout
 roles = ["Top", "Jungle", "Mid", "Bot", "Support"]
 FONT_PATH = "Roboto-Black.ttf"  # Path to a TTF font file 
