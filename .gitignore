@@ -1,13 +1,6 @@
-creds.py
-credentials.json
-was.py
-__pycache__/
+champIcons/
 Data/
+__pycache__/
+Image/
+creds.py
 data.py
-mid.png
-right.png
-top.png
-main.png
-data.json
-college.png
-bot.png
